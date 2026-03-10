@@ -1,13 +1,11 @@
 from fastapi import FastAPI
+from app.routers import user_router, department_router
 
-app = FastAPI()
+app = FastAPI(title="Propig Challenge API")
 
+app.include_router(user_router.router)
+app.include_router(department_router.router)
 
 @app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None):
-    return {"item_id": item_id, "q": q}
+async def root():
+    return {"message": "API is running!"}
