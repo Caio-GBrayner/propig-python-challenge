@@ -31,7 +31,6 @@ def create_access_token(subject: Union[str, Any], expires_delta: timedelta = Non
     return encoded_jwt
 
 def decode_token(token: str) -> Optional[str]:
-    """Decodifica o JWT e retorna o subject (username ou ID)"""
     try:
         payload = jwt.decode(
             token, settings.JWT_SECRET, algorithms=[settings.ALGORITHM]
@@ -47,7 +46,6 @@ async def get_current_user(
     authorization: str = Header(None),
     db: AsyncSession = Depends(get_db)
 ):
-    """Obtém o usuário atual baseado no JWT TOKEN do header Authorization"""
     from app.models.user import User
     
     if not authorization:
@@ -57,7 +55,6 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Extrai o token do header "Authorization: Bearer <token>"
     parts = authorization.split()
     if len(parts) != 2 or parts[0].lower() != "bearer":
         raise HTTPException(
