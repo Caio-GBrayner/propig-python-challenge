@@ -18,7 +18,6 @@ class AuditLogService:
         resource: str, 
         target_id: UUID
     ) -> AuditLog:
-        """Cria um registro de auditoria"""
         log = AuditLog(
             performed_by=performed_by,
             action=action,
@@ -33,7 +32,6 @@ class AuditLogService:
         return log
 
     async def get_audit_logs(self, skip: int = 0, limit: int = 100):
-        """Lista todos os registros de auditoria"""
         result = await self.db.execute(
             select(AuditLog)
             .order_by(AuditLog.created_at.desc())
@@ -43,7 +41,6 @@ class AuditLogService:
         return result.scalars().all()
 
     async def get_logs_by_user(self, user_id: UUID, skip: int = 0, limit: int = 100):
-        """Lista registros de auditoria de um usuário específico"""
         result = await self.db.execute(
             select(AuditLog)
             .where(AuditLog.performed_by == user_id)
@@ -54,7 +51,6 @@ class AuditLogService:
         return result.scalars().all()
 
     async def get_logs_by_resource(self, resource: str, skip: int = 0, limit: int = 100):
-        """Lista registros de auditoria para um recurso específico"""
         result = await self.db.execute(
             select(AuditLog)
             .where(AuditLog.resource == resource)
@@ -65,7 +61,6 @@ class AuditLogService:
         return result.scalars().all()
 
     async def get_logs_by_target(self, target_id: UUID, skip: int = 0, limit: int = 100):
-        """Lista registros de auditoria para um alvo específico"""
         result = await self.db.execute(
             select(AuditLog)
             .where(AuditLog.target_id == target_id)

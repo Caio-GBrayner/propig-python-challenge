@@ -1,6 +1,6 @@
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_, and_
 from app.models.user import User
 from app.schemas.user import UserCreate
 from app.core.security import get_password_hash, verify_password
@@ -14,7 +14,6 @@ class UserService:
         self.db = db
 
     async def register_user(self, user_in: UserCreate) -> User:
-        """Registra um novo usuário"""
         email_check = await self.db.execute(
             select(User).where(User.email == user_in.email)
         )
@@ -108,19 +107,44 @@ class UserService:
         result = await self.db.execute(
             select(User)
             .where(
-                (User.nome.ilike(f"%{query}%")) |
-                (User.sobrenome.ilike(f"%{query}%")) |
-                (User.email.ilike(f"%{query}%")) |
-                (User.username.ilike(f"%{query}%"))
+                or_(
+                    User.nome.ilike(f"%{query}%"),
+                    User.sobrenome.ilike(f"%{query}%"),
+                    User.email.ilike(f"%{query}%"),
+                    User.username.ilike(f"%{query}%")
+                )
             )
             .offset(skip)
             .limit(limit)
         )
         return result.scalars().all()
 
-    async def update_user(self, user_id: UUID, user_data: dict) -> User:
+    async def search_users_by_department(self, query: str, department_id: UUID, skip: int = 0, limit: int = 100):
+        result = await self.db.execute(
+            select(User)
+            .where(
+                and_(
+                    User.department_id == department_id,
+                    or_(
+                        User.nome.ilike(f"%{query}%"),
+                        User.sobrenome.ilike(f"%{query}%"),
+                        User.email.ilike(f"%{query}%"),
+                        User.username.ilike(f"%{query}%")
+                    )
+                )
+            )
+            .offset(skip)
+            .limit(limit)
+        )
+        return result.scalars().all()
+
+    async def update_user(self, user_id: UUID, user_data: dict, is_super: bool = False) -> User:
         user = await self.get_user_by_id(user_id)
         
+        if not is_super:
+            user_data.pop("role", None)
+            user_data.pop("department_id", None)
+
         if "email" in user_data and user_data["email"] != user.email:
             email_check = await self.db.execute(
                 select(User).where(User.email == user_data["email"])

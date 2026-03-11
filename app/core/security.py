@@ -2,13 +2,15 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Union, Optional
 from jose import jwt, JWTError
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status, Header
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.config import settings
 from app.db.session import get_db
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
@@ -43,27 +45,11 @@ def decode_token(token: str) -> Optional[str]:
         return None
 
 async def get_current_user(
-    authorization: str = Header(None),
+    token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db)
 ):
     from app.models.user import User
     
-    if not authorization:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciais ausentes",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    parts = authorization.split()
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Formato de autenticação inválido. Use: Bearer <token>",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    token = parts[1]
     username = decode_token(token)
     if username is None:
         raise HTTPException(
@@ -85,4 +71,3 @@ async def get_current_user(
         )
     
     return user
-
