@@ -161,7 +161,6 @@ class TestUserService:
 
     @pytest.mark.asyncio
     async def test_update_user(self, db_session, employee_user):
-        """Test user update."""
         user_service = UserService(db_session)
         
         update_data = {"nome": "Updated Name"}
@@ -172,7 +171,6 @@ class TestUserService:
 
     @pytest.mark.asyncio
     async def test_delete_user(self, db_session, employee_user):
-        """Test user deletion."""
         user_service = UserService(db_session)
         user_id = employee_user.id
         

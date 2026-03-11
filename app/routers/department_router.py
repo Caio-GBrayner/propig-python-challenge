@@ -21,19 +21,15 @@ async def create_department(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Apenas o perfil SUPER pode criar departamentos."
         )
-    
     dept_service = DepartmentService(db)
     audit_service = AuditLogService(db)
-    
     new_dept = await dept_service.create_department(dept_in)
-    
     await audit_service.log_action(
         performed_by=current_user.id,
         action="CREATE",
         resource="DEPARTMENT",
         target_id=new_dept.id
     )
-    
     return new_dept
 
 @router.get("/", response_model=list[DepartmentOut])
@@ -44,24 +40,10 @@ async def list_departments(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Lista departamentos"""
     dept_service = DepartmentService(db)
-    
     if search:
-        depts = await dept_service.search_departments(search, skip, limit)
-    else:
-        depts = await dept_service.get_all_departments(skip, limit)
-    
-    return depts
-
-@router.get("/{dept_id}", response_model=DepartmentOut)
-async def get_department(
-    dept_id: UUID,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    dept_service = DepartmentService(db)
-    return await dept_service.get_department_by_id(dept_id)
+        return await dept_service.search_departments(search, skip, limit)
+    return await dept_service.get_all_departments(skip, limit)
 
 @router.put("/{dept_id}", response_model=DepartmentOut)
 async def update_department(
@@ -71,24 +53,11 @@ async def update_department(
     db: AsyncSession = Depends(get_db)
 ):
     if current_user.role != UserRole.SUPER:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Apenas o perfil SUPER pode atualizar departamentos."
-        )
-    
+        raise HTTPException(status_code=403, detail="Acesso negado.")
     dept_service = DepartmentService(db)
     audit_service = AuditLogService(db)
-    
-    update_data = dept_data.model_dump(exclude_unset=True)
-    updated_dept = await dept_service.update_department(dept_id, update_data)
-    
-    await audit_service.log_action(
-        performed_by=current_user.id,
-        action="UPDATE",
-        resource="DEPARTMENT",
-        target_id=updated_dept.id
-    )
-    
+    updated_dept = await dept_service.update_department(dept_id, dept_data.model_dump())
+    await audit_service.log_action(current_user.id, "UPDATE", "DEPARTMENT", dept_id)
     return updated_dept
 
 @router.delete("/{dept_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -98,21 +67,9 @@ async def delete_department(
     db: AsyncSession = Depends(get_db)
 ):
     if current_user.role != UserRole.SUPER:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Apenas o perfil SUPER pode deletar departamentos."
-        )
-    
+        raise HTTPException(status_code=403, detail="Acesso negado.")
     dept_service = DepartmentService(db)
     audit_service = AuditLogService(db)
-    
     await dept_service.delete_department(dept_id)
-    
-    await audit_service.log_action(
-        performed_by=current_user.id,
-        action="DELETE",
-        resource="DEPARTMENT",
-        target_id=dept_id
-    )
-    
+    await audit_service.log_action(current_user.id, "DELETE", "DEPARTMENT", dept_id)
     return None

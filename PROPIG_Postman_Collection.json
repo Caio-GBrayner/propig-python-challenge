@@ -1,0 +1,404 @@
+{
+  "info": {
+    "name": "PROPIG - Employee Management API",
+    "description": "Complete RBAC Testing Collection with Fixed UUIDs for CRUD Operations",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Login - SUPER",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"super_token\", jsonData.access_token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"super\",\n  \"password\": \"super123\"\n}"
+            },
+            "url": { "raw": "http://localhost:8000/users/login", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "login"] }
+          }
+        },
+        {
+          "name": "Login - MANAGER (Financeiro)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"manager_token\", jsonData.access_token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"gerente_financeiro\",\n  \"password\": \"manager123\"\n}"
+            },
+            "url": { "raw": "http://localhost:8000/users/login", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "login"] }
+          }
+        },
+        {
+          "name": "Login - EMPLOYEE (TI)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"employee_token\", jsonData.access_token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"funcionario_ti\",\n  \"password\": \"employee123\"\n}"
+            },
+            "url": { "raw": "http://localhost:8000/users/login", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. SUPER Tests - CRUD Users",
+      "item": [
+        {
+          "name": "ALLOWED: List All Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{super_token}}" }],
+            "url": { "raw": "http://localhost:8000/users", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users"] }
+          }
+        },
+        {
+          "name": "ALLOWED: Get User Specific (Own Dept)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{super_token}}" }],
+            "url": { "raw": "http://localhost:8000/users/a1b2c3d4-e5f6-4a5b-bc6d-7e8f9a0b1c2d", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "a1b2c3d4-e5f6-4a5b-bc6d-7e8f9a0b1c2d"] }
+          }
+        },
+        {
+          "name": "ALLOWED: Get User Specific (Other Dept)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{super_token}}" }],
+            "url": { "raw": "http://localhost:8000/users/e2f3a4b5-c6d7-4e8f-9a0b-1c2d3e4f5a6b", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "e2f3a4b5-c6d7-4e8f-9a0b-1c2d3e4f5a6b"] }
+          }
+        },
+        {
+          "name": "ALLOWED: Search Users by Name",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{super_token}}" }],
+            "url": { "raw": "http://localhost:8000/users?search=Pedro", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users"], "query": [{ "key": "search", "value": "Pedro" }] }
+          }
+        },
+        {
+          "name": "ALLOWED: Create New User in Financeiro",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{super_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"novo_usuario_fin\",\n  \"email\": \"novo@propig.com\",\n  \"nome\": \"Novo\",\n  \"sobrenome\": \"Usuario\",\n  \"password\": \"senha123\",\n  \"department_id\": \"b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11\",\n  \"role\": \"EMPLOYEE\"\n}"
+            },
+            "url": { "raw": "http://localhost:8000/users/register", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "register"] }
+          }
+        },
+        {
+          "name": "ALLOWED: Create New Manager in Comercial",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{super_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"gerente_comercial\",\n  \"email\": \"gerente.comercial@propig.com\",\n  \"nome\": \"Gerente\",\n  \"sobrenome\": \"Comercio\",\n  \"password\": \"senha123\",\n  \"department_id\": \"c1f0bd00-0d1c-4f11-8888-7cc0ce491b22\",\n  \"role\": \"MANAGER\"\n}"
+            },
+            "url": { "raw": "http://localhost:8000/users/register", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "register"] }
+          }
+        },
+        {
+          "name": "ALLOWED: Update User (Change Nome)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{super_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Pedro Modificado\"\n}"
+            },
+            "url": { "raw": "http://localhost:8000/users/d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a"] }
+          }
+        },
+        {
+          "name": "ALLOWED: Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{super_token}}" }],
+            "url": { "raw": "http://localhost:8000/users/d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. SUPER Tests - Departments",
+      "item": [
+        {
+          "name": "ALLOWED: List All Departments",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{super_token}}" }],
+            "url": { "raw": "http://localhost:8000/departments", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["departments"] }
+          }
+        },
+        {
+          "name": "ALLOWED: Create New Department",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{super_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Recursos Humanos\"\n}"
+            },
+            "url": { "raw": "http://localhost:8000/departments", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["departments"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. MANAGER Tests (Financeiro) - CRUD Users",
+      "item": [
+        {
+          "name": "ALLOWED: List Own Department Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{manager_token}}" }],
+            "url": { "raw": "http://localhost:8000/users", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users"] }
+          }
+        },
+        {
+          "name": "ALLOWED: Get Employee from Same Department",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{manager_token}}" }],
+            "url": { "raw": "http://localhost:8000/users/d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a"] }
+          }
+        },
+        {
+          "name": "FORBIDDEN: Get User from Other Department",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{manager_token}}" }],
+            "url": { "raw": "http://localhost:8000/users/e2f3a4b5-c6d7-4e8f-9a0b-1c2d3e4f5a6b", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "e2f3a4b5-c6d7-4e8f-9a0b-1c2d3e4f5a6b"] }
+          }
+        },
+        {
+          "name": "ALLOWED: Search Users in Own Department",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{manager_token}}" }],
+            "url": { "raw": "http://localhost:8000/users?search=Pedro", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users"], "query": [{ "key": "search", "value": "Pedro" }] }
+          }
+        },
+        {
+          "name": "ALLOWED: Create User in Own Department",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{manager_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"novo_funcionario_fin\",\n  \"email\": \"novo.funcionario@propig.com\",\n  \"nome\": \"Novo\",\n  \"sobrenome\": \"Funcionario\",\n  \"password\": \"senha123\",\n  \"department_id\": \"b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11\",\n  \"role\": \"EMPLOYEE\"\n}"
+            },
+            "url": { "raw": "http://localhost:8000/users/register", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "register"] }
+          }
+        },
+        {
+          "name": "FORBIDDEN: Create User in Other Department",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{manager_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"funcionario_ti_novo\",\n  \"email\": \"novo.ti@propig.com\",\n  \"nome\": \"Novo\",\n  \"sobrenome\": \"Prof\",\n  \"password\": \"senha123\",\n  \"department_id\": \"d2e1fc11-1e2d-5f22-9999-8dd1df502c33\",\n  \"role\": \"EMPLOYEE\"\n}"
+            },
+            "url": { "raw": "http://localhost:8000/users/register", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "register"] }
+          }
+        },
+        {
+          "name": "ALLOWED: Update User in Own Department",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{manager_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Pedro Manager Modificado\"\n}"
+            },
+            "url": { "raw": "http://localhost:8000/users/d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a"] }
+          }
+        },
+        {
+          "name": "FORBIDDEN: Update User from Other Department",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{manager_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Carlos Dev Modificado\"\n}"
+            },
+            "url": { "raw": "http://localhost:8000/users/e2f3a4b5-c6d7-4e8f-9a0b-1c2d3e4f5a6b", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "e2f3a4b5-c6d7-4e8f-9a0b-1c2d3e4f5a6b"] }
+          }
+        },
+        {
+          "name": "ALLOWED: Delete User from Own Department",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{manager_token}}" }],
+            "url": { "raw": "http://localhost:8000/users/d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a"] }
+          }
+        },
+        {
+          "name": "FORBIDDEN: Delete User from Other Department",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{manager_token}}" }],
+            "url": { "raw": "http://localhost:8000/users/e2f3a4b5-c6d7-4e8f-9a0b-1c2d3e4f5a6b", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "e2f3a4b5-c6d7-4e8f-9a0b-1c2d3e4f5a6b"] }
+          }
+        },
+        {
+          "name": "FORBIDDEN: Create Department (Managers cannot)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{manager_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Novo Departamento\"\n}"
+            },
+            "url": { "raw": "http://localhost:8000/departments", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["departments"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. EMPLOYEE Tests (TI) - Restricted Access",
+      "item": [
+        {
+          "name": "ALLOWED: View Own Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{employee_token}}" }],
+            "url": { "raw": "http://localhost:8000/users/e2f3a4b5-c6d7-4e8f-9a0b-1c2d3e4f5a6b", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "e2f3a4b5-c6d7-4e8f-9a0b-1c2d3e4f5a6b"] }
+          }
+        },
+        {
+          "name": "FORBIDDEN: List All Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{employee_token}}" }],
+            "url": { "raw": "http://localhost:8000/users", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users"] }
+          }
+        },
+        {
+          "name": "FORBIDDEN: Get Other User Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{employee_token}}" }],
+            "url": { "raw": "http://localhost:8000/users/d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a"] }
+          }
+        },
+        {
+          "name": "FORBIDDEN: Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{employee_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"novo_funcionario_ti\",\n  \"email\": \"novo.ti@propig.com\",\n  \"nome\": \"Novo\",\n  \"sobrenome\": \"Dev\",\n  \"password\": \"senha123\",\n  \"department_id\": \"d2e1fc11-1e2d-5f22-9999-8dd1df502c33\",\n  \"role\": \"EMPLOYEE\"\n}"
+            },
+            "url": { "raw": "http://localhost:8000/users/register", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "register"] }
+          }
+        },
+        {
+          "name": "FORBIDDEN: Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{employee_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Carlos Dev Alterado\"\n}"
+            },
+            "url": { "raw": "http://localhost:8000/users/e2f3a4b5-c6d7-4e8f-9a0b-1c2d3e4f5a6b", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "e2f3a4b5-c6d7-4e8f-9a0b-1c2d3e4f5a6b"] }
+          }
+        },
+        {
+          "name": "FORBIDDEN: Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{employee_token}}" }],
+            "url": { "raw": "http://localhost:8000/users/d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["users", "d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a"] }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "super_token", "value": "", "type": "string" },
+    { "key": "manager_token", "value": "", "type": "string" },
+    { "key": "employee_token", "value": "", "type": "string" }
+  ]
+}
