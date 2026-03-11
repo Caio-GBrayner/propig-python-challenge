@@ -20,3 +20,11 @@ class UserOut(UserBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    nome: Optional[str] = None
+    sobrenome: Optional[str] = None
+    role: Optional[UserRole] = None
+    department_id: Optional[UUID] = None
