@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, status, HTTPException, Query, Header
+from fastapi import APIRouter, Depends, status, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
-from app.schemas.user import UserCreate, UserOut, UserBase
+from app.schemas.user import UserCreate, UserOut, UserBase, UserUpdate
 from app.schemas.token import Token
 from app.services.user_service import UserService
 from app.services.audit_log_service import AuditLogService
@@ -83,24 +83,19 @@ async def list_users(
     
     if current_user.role == UserRole.SUPER:
         if search:
-            users = await user_service.search_users(search, skip, limit)
-        else:
-            users = await user_service.get_all_users(skip, limit)
-        return users
+            return await user_service.search_users(search, skip, limit)
+        return await user_service.get_all_users(skip, limit)
     
     elif current_user.role == UserRole.MANAGER:
         if search:
-            all_results = await user_service.search_users(search, 0, 1000)
-            dept_results = [u for u in all_results if u.department_id == current_user.department_id]
-            return dept_results[skip:skip+limit]
-        else:
-            users = await user_service.get_users_by_department(
-                current_user.department_id, skip, limit
+            return await user_service.search_users_by_department(
+                search, current_user.department_id, skip, limit
             )
-            return users
+        return await user_service.get_users_by_department(
+            current_user.department_id, skip, limit
+        )
     
-    else:
-        return [current_user]
+    return [current_user]
 
 @router.get("/{user_id}", response_model=UserOut)
 async def get_user(
@@ -114,7 +109,7 @@ async def get_user(
     if current_user.role == UserRole.SUPER:
         return user
     
-    elif current_user.role == UserRole.MANAGER:
+    if current_user.role == UserRole.MANAGER:
         if user.department_id != current_user.department_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -122,18 +117,17 @@ async def get_user(
             )
         return user
     
-    else:
-        if user.id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Você não tem permissão para ver este usuário."
-            )
-        return user
+    if user.id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Você não tem permissão para ver este usuário."
+        )
+    return user
 
 @router.put("/{user_id}", response_model=UserOut)
 async def update_user(
     user_id: UUID,
-    user_data: UserBase,
+    user_data: UserUpdate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -155,8 +149,11 @@ async def update_user(
     
     audit_service = AuditLogService(db)
     
-    update_data = user_data.model_dump(exclude_unset=True)
-    updated_user = await user_service.update_user(user_id, update_data)
+    updated_user = await user_service.update_user(
+        user_id, 
+        user_data.model_dump(exclude_unset=True),
+        is_super=(current_user.role == UserRole.SUPER)
+    )
     
     await audit_service.log_action(
         performed_by=current_user.id,
@@ -173,7 +170,6 @@ async def delete_user(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Deleta um usuário (apenas SUPER ou MANAGER do departamento)"""
     user_service = UserService(db)
     existing_user = await user_service.get_user_by_id(user_id)
     
@@ -191,7 +187,6 @@ async def delete_user(
             )
     
     audit_service = AuditLogService(db)
-    
     await user_service.delete_user(user_id)
     
     await audit_service.log_action(
